@@ -1,4 +1,4 @@
-import maya.cmds as cmds
+from maya import cmds
 
 class MayaPlayblast(object):
     """Defines a GUI class."""
@@ -52,6 +52,7 @@ class MayaPlayblast(object):
         self.fps_opt = cmds.optionMenuGrp(p=self.range_frame, el=' FPS ', w=OPT_WIDTH)
         for f in FPS_OPT:
             cmds.menuItem(f)
+        cmds.optionMenuGrp(self.fps_opt, e=True, v='60')
 
         self.options_sep = cmds.separator(p=self.window_frame, st=SEP_STYLE)
         self.options_frame = cmds.rowColumnLayout(p=self.window_frame, nc=8)
@@ -120,11 +121,11 @@ class MayaPlayblast(object):
         if result != "":
             cmds.textField(self.output_entry, e=True, tx=result[0])
 
-
-        
-
-
     # cmds.playblast( p=60, s="ohNo", f="C:/Users/T480/Desktop/myMovie2.mv", v=True )
+    def playblast(self, val):
+        ff_path = cmds.
+        
+        argument = f""
 
 if __name__ == "__main__":
     

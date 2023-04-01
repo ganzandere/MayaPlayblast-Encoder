@@ -12,7 +12,7 @@ class MayaPlayblast(object):
         self.title = "DK MayaPlayblast"
         self.size = (610,400)
         
-        FFMPEG_PATH = r'\\5d-server\PLUGINS\ffmpeg\ffmpeg.exe'
+        FFMPEG_PATH = r'\\5d-server\PLUGINS\ffmpeg\bin\ffmpeg.exe'
         PATH_ENTRY_WIDTH = 500
         RANGE_ENTRY_WIDTH = 70
         

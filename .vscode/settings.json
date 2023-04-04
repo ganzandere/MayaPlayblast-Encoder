@@ -6,4 +6,5 @@
         "--disable=E1111",
         "--disable=E1123",
         "--disable=E1124",
-    }
+    ]
+}

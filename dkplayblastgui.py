@@ -5,28 +5,29 @@ import subprocess
 from maya import cmds
 
 
-class DkPlayblastGUI(object):
+class DkPlayblastGUI():
     """Defines a GUI class."""
+
     def __init__(self):
         super().__init__()
         self.window = "root"
         self.title = "DK MayaPlayblast"
-        self.size = (610,400)
-        
+        self.size = (610, 400)
+
         FFMPEG_PATH = r'\\5d-server\PLUGINS\ffmpeg\bin\ffmpeg.exe'
         PATH_ENTRY_WIDTH = 500
         RANGE_ENTRY_WIDTH = 70
-        
+
         BROWSE_WIDTH = 100
         PLAYBLAST_WIDTH = 100
-        
+
         OPT_WIDTH = 140
-        
+
         LAY_HEIGHT = 30
         SEP_STYLE = 'in'
         SEP_STYLE2 = 'single'
         VERTICAL_SEP_WIDTH = 15
-        
+
         SLIDER_WIDTH = 140
         SLIDER_FRAME_WIDTH = SLIDER_WIDTH + 30
 
@@ -34,32 +35,32 @@ class DkPlayblastGUI(object):
 
         self.CODECS = ['libx264', 'libx265']
         self.PRESET_VALS = ['ultrafast', 'superfast', 'veryfast', 'faster',
-                      'fast', 'medium', 'slow', 'slower', 'veryslow']
-        
+                            'fast', 'medium', 'slow', 'slower', 'veryslow']
+
         self.ENCODERS = ['libx264', 'libx265']
         self.LIBX264_CONTAINERS = ['mp4', 'mkv', 'avi', 'mov']
         self.LIBX265_CONTAINERS = ['hevc', 'mp4', 'mov', 'mkv']
 
-        CRF_MIN=16
-        CRF_MAX=28
+        CRF_MIN = 16
+        CRF_MAX = 28
 
         self.IMG_EXT = 'png'
 
-        if cmds.window(self.window, exists = True):
+        if cmds.window(self.window, exists=True):
             cmds.deleteUI(self.window, window=True)
 
         self.window = cmds.window(self.window, title=self.title, widthHeight=self.size, i=False, s=0)
         self.window_frame = cmds.columnLayout(adj=True)
 
-        self.ffmpeg_frame = cmds.rowLayout(p=self.window_frame, nc=2, height = LAY_HEIGHT)
+        self.ffmpeg_frame = cmds.rowLayout(p=self.window_frame, nc=2, height=LAY_HEIGHT)
         self.ffmpeg_entry = cmds.textField(p=self.ffmpeg_frame, w=PATH_ENTRY_WIDTH, tx=FFMPEG_PATH, ann='FFmpeg.exe path')
         self.ffmpeg_btn = cmds.button(p=self.ffmpeg_frame, l='Browse', w=BROWSE_WIDTH, c=self.ff_browse_callback)
-        
+
         self.range_sep = cmds.separator(p=self.window_frame, st=SEP_STYLE)
         self.range_frame = cmds.rowLayout(p=self.window_frame, nc=9, h=LAY_HEIGHT)
-        self.sframe_entry = cmds.textField(p=self.range_frame, w=RANGE_ENTRY_WIDTH, tx=int(cmds.playbackOptions(q=True,min=True)))
+        self.sframe_entry = cmds.textField(p=self.range_frame, w=RANGE_ENTRY_WIDTH, tx=int(cmds.playbackOptions(q=True, min=True)))
         self.sframe_label = cmds.text(p=self.range_frame, l=' Start Frame ')
-        self.eframe_entry = cmds.textField(p=self.range_frame, w=RANGE_ENTRY_WIDTH, tx=int(cmds.playbackOptions(q=True,max=True)))
+        self.eframe_entry = cmds.textField(p=self.range_frame, w=RANGE_ENTRY_WIDTH, tx=int(cmds.playbackOptions(q=True, max=True)))
         self.sframe_label = cmds.text(p=self.range_frame, l=' End Frame ')
 
         self.fps_opt = cmds.optionMenuGrp(p=self.range_frame, el=' FPS ', w=OPT_WIDTH - 40)
@@ -73,25 +74,25 @@ class DkPlayblastGUI(object):
 
         self.options_sep = cmds.separator(p=self.window_frame, st=SEP_STYLE)
         self.options_frame = cmds.rowColumnLayout(p=self.window_frame, nc=8)
-        
+
         self.codec_frame = cmds.rowLayout(p=self.options_frame, nc=1, w=OPT_WIDTH)
         self.codec_opt = cmds.optionMenuGrp(p=self.codec_frame, el=' Codec', cc=self.codecs_opt_callback)
         for e in self.ENCODERS:
             cmds.menuItem(e)
 
-        self.presets_sep=cmds.separator(p=self.options_frame, hr=0, st=SEP_STYLE2, w=VERTICAL_SEP_WIDTH)
+        self.presets_sep = cmds.separator(p=self.options_frame, hr=0, st=SEP_STYLE2, w=VERTICAL_SEP_WIDTH)
         self.presets_frame = cmds.rowLayout(p=self.options_frame, nc=1, w=OPT_WIDTH)
         self.presets_opt = cmds.optionMenuGrp(p=self.presets_frame, el=' Preset')
         for p in self.PRESET_VALS:
             cmds.menuItem(p)
         cmds.optionMenuGrp(self.presets_opt, e=True, v='medium')
 
-        self.crf_sep=cmds.separator(p=self.options_frame, hr=0, st=SEP_STYLE2, w=VERTICAL_SEP_WIDTH)
+        self.crf_sep = cmds.separator(p=self.options_frame, hr=0, st=SEP_STYLE2, w=VERTICAL_SEP_WIDTH)
         self.crf_frame = cmds.rowLayout(p=self.options_frame, nc=2, w=SLIDER_FRAME_WIDTH)
         self.crf_slider = cmds.intSliderGrp(p=self.crf_frame, el=' CRF', min=CRF_MIN, max=CRF_MAX, s=(CRF_MAX-CRF_MIN), w=SLIDER_WIDTH, v=23, dc=self.crf_slider_callback)
         self.crf_val = cmds.text(p=self.crf_frame, l=cmds.intSliderGrp(self.crf_slider, q=True, v=True))
-        
-        self.container_sep=cmds.separator(p=self.options_frame, hr=0, st=SEP_STYLE2, w=VERTICAL_SEP_WIDTH)
+
+        self.container_sep = cmds.separator(p=self.options_frame, hr=0, st=SEP_STYLE2, w=VERTICAL_SEP_WIDTH)
         self.container_frame = cmds.rowLayout(p=self.options_frame, nc=1, w=OPT_WIDTH)
         self.container_opt = cmds.optionMenuGrp(p=self.container_frame, el='', cc=self.container_callback)
         for c in self.LIBX264_CONTAINERS:
@@ -103,14 +104,13 @@ class DkPlayblastGUI(object):
         self.output_browse = cmds.button(p=self.output_frame, l='Browse', w=BROWSE_WIDTH, c=self.out_browse_callback)
 
         self.pblast_sep = cmds.separator(p=self.window_frame, st=SEP_STYLE)
-        self.pblast_frame = cmds.columnLayout(p=self.window_frame,adj=True, h=LAY_HEIGHT)
+        self.pblast_frame = cmds.columnLayout(p=self.window_frame, adj=True, h=LAY_HEIGHT)
         self.pblast_btn = cmds.button(p=self.pblast_frame, l='Playblast', w=PLAYBLAST_WIDTH, bgc=[0.1, 0.5, 0.3], al='center', c=self.playblast_callback)
-
 
         self.log_sep = cmds.separator(p=self.window_frame, st=SEP_STYLE)
         self.log_frame = cmds.columnLayout(p=self.window_frame)
-        
-        self.log_label = cmds.text(p=self.log_frame, l='Log', height = 20)
+
+        self.log_label = cmds.text(p=self.log_frame, l='Log', height=20)
         self.log = cmds.scrollField(p=self.log_frame, w=600, ed=False)
 
         cmds.showWindow()
@@ -135,14 +135,14 @@ class DkPlayblastGUI(object):
             cmds.optionMenuGrp(self.container_opt, e=True, dai=True)
             for c in self.LIBX265_CONTAINERS:
                 cmds.menuItem(c)
-            filename =  cmds.textField(self.output_entry, q=True, tx=True)
-            if filename != "":    
+            filename = cmds.textField(self.output_entry, q=True, tx=True)
+            if filename != "":
                 filename = f"{os.path.splitext(filename)[0]}.{cmds.optionMenuGrp(self.container_opt, q=True, v=True)}"
                 cmds.textField(self.output_entry, e=True, tx=filename)
 
     def container_callback(self, val):
         """Defines container optionsmenu behaviour."""
-        filename =  cmds.textField(self.output_entry, q=True, tx=True)
+        filename = cmds.textField(self.output_entry, q=True, tx=True)
         if filename != "":
             filename = f"{os.path.splitext(filename)[0]}.{val}"
             cmds.textField(self.output_entry, e=True, tx=filename)
@@ -159,8 +159,7 @@ class DkPlayblastGUI(object):
         if not os.path.isfile(ff_path):
             cmds.scrollField(self.log, e=True, tx=f"Deadline not found at: '{ff_path}'.")
             return
-        
-        
+
         sframe = cmds.textField(self.sframe_entry, q=True, tx=True)
         eframe = cmds.textField(self.eframe_entry, q=True, tx=True)
         padding = len(str(eframe))
@@ -172,10 +171,10 @@ class DkPlayblastGUI(object):
         if out == "":
             cmds.scrollField(self.log, e=True, tx="Please choose an output filepath.")
             return
-        
-        ornaments=cmds.checkBox(self.ornaments_check, q=True, v=True)
+
+        ornaments = cmds.checkBox(self.ornaments_check, q=True, v=True)
         directory = os.path.dirname(out)
-        
+
         cmds.playblast(cc=True, c=self.IMG_EXT, fo=True, fmt='image', st=sframe, et=eframe, f=out, fp=padding, orn=ornaments, v=False, p=100)
         self.format_ffmpeg(ff_path, directory, out)
 
@@ -188,8 +187,8 @@ class DkPlayblastGUI(object):
                 if file.startswith(os.path.split(out)[-1]):
                     if file.endswith(self.IMG_EXT):
                         outfile.write(f"file '{os.path.normpath(file)}'\n".encode())
-        filelist =  f"{directory}/ffmpeg_input.txt"
-        
+        filelist = f"{directory}/ffmpeg_input.txt"
+
         encoder = cmds.optionMenuGrp(self.codec_opt, q=True, v=True)
         crf = cmds.intSliderGrp(self.crf_slider, q=True, v=True)
         preset = cmds.optionMenuGrp(self.presets_opt, q=True, v=True)
@@ -202,7 +201,7 @@ class DkPlayblastGUI(object):
         cmds.scrollField(self.log, e=True, it=f"{result[1]}\n")
 
         if os.path.isfile(out):
-            cmds.scrollField(self.log, e=True, it=f"Succesfully created:\n '{out}'\n")       
+            cmds.scrollField(self.log, e=True, it=f"Succesfully created:\n '{out}'\n")
             if cmds.checkBox(self.cleanup_check, q=True, v=True):
                 with open(filelist, "r") as outfile:
                     for line in outfile:
@@ -225,4 +224,3 @@ class DkPlayblastGUI(object):
 
 if __name__ == "__main__":
     app = DkPlayblastGUI()
-    

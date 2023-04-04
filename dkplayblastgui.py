@@ -194,7 +194,7 @@ class DkPlayblastGUI():
         preset = cmds.optionMenuGrp(self.presets_opt, q=True, v=True)
         out = os.path.normpath(cmds.textField(self.output_entry, q=True, tx=True))
 
-        cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -c:v {encoder} -crf {crf} -preset {preset} {out}"
+        cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -pixel_format yuv420p -c:v {encoder} -crf {crf} -preset {preset} {out}"
         cmds.scrollField(self.log, e=True, cl=True)
         cmds.scrollField(self.log, e=True, it=f"{cmd}\n\n")
         result = self.submit_ffmpeg(cmd)

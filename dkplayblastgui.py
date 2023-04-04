@@ -1,3 +1,4 @@
+"""Maya GUI script that creates playblasts and sends completed frames directly to FFmpeg."""
 import os
 import subprocess
 

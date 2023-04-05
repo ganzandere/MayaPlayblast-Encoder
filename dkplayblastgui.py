@@ -1,6 +1,7 @@
 """Maya GUI script that creates playblasts and sends completed frames directly to FFmpeg."""
 import os
 import subprocess
+import tempfile
 
 from maya import cmds
 
@@ -155,11 +156,13 @@ class DkPlayblastGUI():
 
     def playblast_callback(self, val):
         """Defines playblast button behaviour."""
+        #Checks path.
         ff_path = os.path.normpath(cmds.textField(self.ffmpeg_entry, q=True, tx=True))
         if not os.path.isfile(ff_path):
             cmds.scrollField(self.log, e=True, tx=f"Deadline not found at: '{ff_path}'.")
             return
 
+        #Checks frames.
         sframe = cmds.textField(self.sframe_entry, q=True, tx=True)
         eframe = cmds.textField(self.eframe_entry, q=True, tx=True)
         padding = len(str(eframe))
@@ -167,52 +170,55 @@ class DkPlayblastGUI():
             cmds.scrollField(self.log, e=True, tx="Start Frame must be smaller than End Frame.")
             return
 
-        out = os.path.splitext(cmds.textField(self.output_entry, q=True, tx=True))[0]
-        if out == "":
+        #Checks output.
+        output_entry = cmds.textField(self.output_entry, q=True, tx=True)
+        if output_entry == "":
             cmds.scrollField(self.log, e=True, tx="Please choose an output filepath.")
             return
-
+        container = cmds.optionMenuGrp(self.container_opt, q=True, v=True)
+        if not output_entry.endswith(container):
+            output_entry = f"{os.path.splitext(output_entry)[0]}.{container}"
+            cmds.textField(self.output_entry, e=True, tx=output_entry)        
+        #Get ornaments state.
         ornaments = cmds.checkBox(self.ornaments_check, q=True, v=True)
-        directory = os.path.dirname(out)
 
-        cmds.playblast(cc=True, c=self.IMG_EXT, fo=True, fmt='image', st=sframe, et=eframe, f=out, fp=padding, orn=ornaments, v=False, p=100)
-        self.format_ffmpeg(ff_path, directory, out)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            print(f"Temp dir path: {temp_dir}")
+            playblast_out = (os.path.join(temp_dir, os.path.splitext(os.path.basename(output_entry))[0]))
+            cmds.playblast(cc=True, c=self.IMG_EXT, fo=True, fmt='image', st=sframe, et=eframe, f=playblast_out, fp=padding, orn=ornaments, v=False, p=100)
+            self.format_ffmpeg(ff_path, temp_dir)
 
-    def format_ffmpeg(self, ff_path, directory, out):
-        """Transforms exposed arguments into a ffmpeg command."""
-        fps = cmds.optionMenuGrp(self.fps_opt, q=True, v=True)
+    def format_ffmpeg(self, ff_path, directory):
+        """Transforms arguments into ffmpeg command."""
 
-        with open(f"{directory}/ffmpeg_input.txt", "wb") as outfile:
+        #writes a .txt list of files
+        filelist = os.path.join(directory, "ffmpeg_input.txt")
+        with open(filelist, "wb") as outfile:
             for file in os.listdir(directory):
-                if file.startswith(os.path.split(out)[-1]):
-                    if file.endswith(self.IMG_EXT):
-                        outfile.write(f"file '{os.path.normpath(file)}'\n".encode())
-        filelist = f"{directory}/ffmpeg_input.txt"
+                if file.endswith(self.IMG_EXT):
+                    print(file)
+                    outfile.write(f"file '{os.path.normpath(file)}'\n".encode())
+        print(f"ffmpeg_input.txt path: {filelist}")
 
+        #Get gui vars related to ffmpeg.
+        fps = cmds.optionMenuGrp(self.fps_opt, q=True, v=True)
         encoder = cmds.optionMenuGrp(self.codec_opt, q=True, v=True)
         crf = cmds.intSliderGrp(self.crf_slider, q=True, v=True)
         preset = cmds.optionMenuGrp(self.presets_opt, q=True, v=True)
         out = os.path.normpath(cmds.textField(self.output_entry, q=True, tx=True))
 
-        cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -pixel_format yuv420p -c:v {encoder} -crf {crf} -preset {preset} {out}"
+        #Log command and submit to ffmpeg.
+        # cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -pix_fmt yuv420p -c:v {encoder} -crf {crf} -preset {preset} \"{out}\""
+        cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -c:v {encoder} -crf {crf} -preset {preset} \"{out}\""
+        print(f"FFmpeg command: {cmd}")
         cmds.scrollField(self.log, e=True, cl=True)
         cmds.scrollField(self.log, e=True, it=f"{cmd}\n\n")
         result = self.submit_ffmpeg(cmd)
-        cmds.scrollField(self.log, e=True, it=f"{result[1]}\n")
 
+        #Log results.
+        cmds.scrollField(self.log, e=True, it=f"{result[1]}\n")
         if os.path.isfile(out):
             cmds.scrollField(self.log, e=True, it=f"Succesfully created:\n '{out}'\n")
-            if cmds.checkBox(self.cleanup_check, q=True, v=True):
-                with open(filelist, "r") as outfile:
-                    for line in outfile:
-                        file = line.split(' ')[-1].strip("'").strip("\n").strip("'")
-                        filename = f"{directory}/{file}"
-                        try:
-                            os.remove(os.path.normpath(filename))
-                            # print("Cleanup succesfull")
-                        except OSError as error:
-                            print(f"Error: {error}")
-            os.remove(filelist)
 
     def submit_ffmpeg(self, ffmpeg_command):
         """Submits a constructed command to ffmpeg by subprocess."""

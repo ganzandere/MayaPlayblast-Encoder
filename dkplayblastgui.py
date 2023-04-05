@@ -39,7 +39,7 @@ class DkPlayblastGUI():
                             'fast', 'medium', 'slow', 'slower', 'veryslow']
 
         self.ENCODERS = ['libx264', 'libx265']
-        self.LIBX264_CONTAINERS = ['mp4', 'mkv', 'avi', 'mov']
+        self.LIBX264_CONTAINERS = ['mp4', 'mkv', 'mov']
         self.LIBX265_CONTAINERS = ['hevc', 'mp4', 'mov', 'mkv']
 
         CRF_MIN = 16
@@ -71,7 +71,6 @@ class DkPlayblastGUI():
 
         self.ornaments_sep = cmds.separator(p=self.range_frame, st=SEP_STYLE2, hr=0, w=VERTICAL_SEP_WIDTH, h=LAY_HEIGHT-5)
         self.ornaments_check = cmds.checkBox(p=self.range_frame, l='Ornaments', v=False)
-        self.cleanup_check = cmds.checkBox(p=self.range_frame, l='Cleanup', v=True)
 
         self.options_sep = cmds.separator(p=self.window_frame, st=SEP_STYLE)
         self.options_frame = cmds.rowColumnLayout(p=self.window_frame, nc=8)

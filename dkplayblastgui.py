@@ -209,7 +209,7 @@ class DkPlayblastGUI():
 
         #Log command and submit to ffmpeg.
         # cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -pix_fmt yuv420p -c:v {encoder} -crf {crf} -preset {preset} \"{out}\""
-        cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -c:v {encoder} -crf {crf} -preset {preset} \"{out}\""
+        cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -c:v {encoder} -vf \"pad=ceil(iw/2)*2:ceil(ih/2)*2\" -crf {crf} -preset {preset} -pix_fmt yuv420p \"{out}\""
         print(f"FFmpeg command: {cmd}")
         cmds.scrollField(self.log, e=True, cl=True)
         cmds.scrollField(self.log, e=True, it=f"{cmd}\n\n")

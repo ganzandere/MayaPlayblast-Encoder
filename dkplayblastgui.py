@@ -15,7 +15,7 @@ class DkPlayblastGUI():
         self.title = "DK MayaPlayblast"
         self.size = (610, 400)
 
-        FFMPEG_PATH = r'\\5d-server\PLUGINS\ffmpeg\bin\ffmpeg.exe'
+        ffmpeg_path = self.find_ffmpeg()
         PATH_ENTRY_WIDTH = 500
         RANGE_ENTRY_WIDTH = 70
 
@@ -54,7 +54,7 @@ class DkPlayblastGUI():
         self.window_frame = cmds.columnLayout(adj=True)
 
         self.ffmpeg_frame = cmds.rowLayout(p=self.window_frame, nc=2, height=LAY_HEIGHT)
-        self.ffmpeg_entry = cmds.textField(p=self.ffmpeg_frame, w=PATH_ENTRY_WIDTH, tx=FFMPEG_PATH, ann='FFmpeg.exe path')
+        self.ffmpeg_entry = cmds.textField(p=self.ffmpeg_frame, w=PATH_ENTRY_WIDTH, tx=ffmpeg_path, ann='FFmpeg.exe path')
         self.ffmpeg_btn = cmds.button(p=self.ffmpeg_frame, l='Browse', w=BROWSE_WIDTH, c=self.ff_browse_callback)
 
         self.range_sep = cmds.separator(p=self.window_frame, st=SEP_STYLE)
@@ -184,7 +184,6 @@ class DkPlayblastGUI():
         ornaments = cmds.checkBox(self.ornaments_check, q=True, v=True)
 
         with tempfile.TemporaryDirectory() as temp_dir:
-            print(f"Temp dir path: {temp_dir}")
             playblast_out = (os.path.join(temp_dir, os.path.splitext(os.path.basename(output_entry))[0]))
             cmds.playblast(cc=True, c=self.IMG_EXT, fo=True, fmt='image', st=sframe, et=eframe, f=playblast_out, fp=padding, orn=ornaments, v=False, p=100)
             self.format_ffmpeg(ff_path, temp_dir)
@@ -197,9 +196,7 @@ class DkPlayblastGUI():
         with open(filelist, "wb") as outfile:
             for file in os.listdir(directory):
                 if file.endswith(self.IMG_EXT):
-                    print(file)
                     outfile.write(f"file '{os.path.normpath(file)}'\n".encode())
-        print(f"ffmpeg_input.txt path: {filelist}")
 
         #Get gui vars related to ffmpeg.
         fps = cmds.optionMenuGrp(self.fps_opt, q=True, v=True)
@@ -209,9 +206,7 @@ class DkPlayblastGUI():
         out = os.path.normpath(cmds.textField(self.output_entry, q=True, tx=True))
 
         #Log command and submit to ffmpeg.
-        # cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -pix_fmt yuv420p -c:v {encoder} -crf {crf} -preset {preset} \"{out}\""
         cmd = f"{ff_path} -y -r {fps} -f concat -safe 0 -i {filelist} -framerate {fps} -c:v {encoder} -vf \"pad=ceil(iw/2)*2:ceil(ih/2)*2\" -crf {crf} -preset {preset} -pix_fmt yuv420p \"{out}\""
-        print(f"FFmpeg command: {cmd}")
         cmds.scrollField(self.log, e=True, cl=True)
         cmds.scrollField(self.log, e=True, it=f"{cmd}\n\n")
         result = self.submit_ffmpeg(cmd)
@@ -230,6 +225,20 @@ class DkPlayblastGUI():
         stdout, stderr = p.communicate()
         return stdout.decode(), stderr.decode()
 
+    def find_ffmpeg(self):
+        """Returns ffmpeg.exe path found on system"""
+        FFMPEG_SERVER_PATH = r"//5d-server/PLUGINS/ffmpeg/bin/ffmpeg.exe"
+        FFMPEG_LOCAL_PATH = r"C:/ffmpeg/bin/ffmpeg.exe"
+
+        ffmpeg_path = ""
+        if "FFMPEG_PATH" in os.environ:
+            if os.path.isfile(os.environ["FFMPEG_PATH"]):
+                ffmpeg_path = os.environ["FFMPEG_PATH"]
+        elif os.path.isfile(FFMPEG_SERVER_PATH):
+            ffmpeg_path = FFMPEG_SERVER_PATH
+        elif os.path.isfile(FFMPEG_LOCAL_PATH):
+            ffmpeg_path = FFMPEG_LOCAL_PATH
+        return ffmpeg_path
 
 if __name__ == "__main__":
     app = DkPlayblastGUI()

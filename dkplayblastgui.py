@@ -72,6 +72,8 @@ class DkPlayblastGUI():
         self.ornaments_sep = cmds.separator(p=self.range_frame, st=SEP_STYLE2, hr=0, w=VERTICAL_SEP_WIDTH, h=LAY_HEIGHT-5)
         self.ornaments_check = cmds.checkBox(p=self.range_frame, l='Ornaments', v=False)
 
+        self.autoplay_check = cmds.checkBox(p=self.range_frame, l='Autoplay', v=True)
+
         self.options_sep = cmds.separator(p=self.window_frame, st=SEP_STYLE)
         self.options_frame = cmds.rowColumnLayout(p=self.window_frame, nc=8)
 
@@ -177,7 +179,7 @@ class DkPlayblastGUI():
         container = cmds.optionMenuGrp(self.container_opt, q=True, v=True)
         if not output_entry.endswith(container):
             output_entry = f"{os.path.splitext(output_entry)[0]}.{container}"
-            cmds.textField(self.output_entry, e=True, tx=output_entry)        
+            cmds.textField(self.output_entry, e=True, tx=output_entry)
         #Get ornaments state.
         ornaments = cmds.checkBox(self.ornaments_check, q=True, v=True)
 
@@ -218,6 +220,8 @@ class DkPlayblastGUI():
         cmds.scrollField(self.log, e=True, it=f"{result[1]}\n")
         if os.path.isfile(out):
             cmds.scrollField(self.log, e=True, it=f"Succesfully created:\n '{out}'\n")
+            if cmds.checkBox(self.autoplay_check, q=True, v=True):
+                os.startfile(out)
 
     def submit_ffmpeg(self, ffmpeg_command):
         """Submits a constructed command to ffmpeg by subprocess."""

@@ -160,7 +160,7 @@ class DkPlayblastGUI():
         #Checks path.
         ff_path = os.path.normpath(cmds.textField(self.ffmpeg_entry, q=True, tx=True))
         if not os.path.isfile(ff_path):
-            cmds.scrollField(self.log, e=True, tx=f"Deadline not found at: '{ff_path}'.")
+            cmds.scrollField(self.log, e=True, tx=f"FFmpeg.exe not found at: '{ff_path}'.")
             return
 
         #Checks frames.
